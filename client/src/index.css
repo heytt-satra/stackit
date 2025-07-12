@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+  
+  /* Custom StackIt colors */
+  --dark-bg: hsl(220, 26%, 6%);
+  --dark-secondary: hsl(220, 23%, 9%);
+  --dark-surface: hsl(220, 20%, 13%);
+  --dark-border: hsl(220, 15%, 19%);
+  --dark-text: hsl(210, 40%, 98%);
+  --dark-text-secondary: hsl(218, 11%, 65%);
+  --accent-green: hsl(142, 71%, 45%);
+  --accent-blue: hsl(207, 90%, 54%);
+  --accent-purple: hsl(270, 61%, 64%);
+  --accent-orange: hsl(25, 95%, 53%);
+  --accent-red: hsl(5, 81%, 53%);
+  --accent-yellow: hsl(45, 100%, 38%);
+}
+
+.dark {
+  --background: hsl(220, 26%, 6%);
+  --foreground: hsl(210, 40%, 98%);
+  --muted: hsl(220, 20%, 13%);
+  --muted-foreground: hsl(218, 11%, 65%);
+  --popover: hsl(220, 23%, 9%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --card: hsl(220, 23%, 9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --border: hsl(220, 15%, 19%);
+  --input: hsl(220, 15%, 19%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(220, 20%, 13%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --accent: hsl(220, 20%, 13%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --ring: hsl(217, 32%, 17%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+  }
+}
+
+/* Custom utilities for StackIt theme */
+.dark-bg {
+  background-color: var(--dark-bg);
+}
+
+.dark-secondary {
+  background-color: var(--dark-secondary);
+}
+
+.dark-surface {
+  background-color: var(--dark-surface);
+}
+
+.dark-border {
+  border-color: var(--dark-border);
+}
+
+.dark-text {
+  color: var(--dark-text);
+}
+
+.dark-text-secondary {
+  color: var(--dark-text-secondary);
+}
+
+.accent-green {
+  color: var(--accent-green);
+}
+
+.accent-blue {
+  color: var(--accent-blue);
+}
+
+.accent-purple {
+  color: var(--accent-purple);
+}
+
+.accent-orange {
+  color: var(--accent-orange);
+}
+
+.accent-red {
+  color: var(--accent-red);
+}
+
+.accent-yellow {
+  color: var(--accent-yellow);
+}
+
+.bg-accent-green {
+  background-color: var(--accent-green);
+}
+
+.bg-accent-blue {
+  background-color: var(--accent-blue);
+}
+
+.bg-accent-purple {
+  background-color: var(--accent-purple);
+}
+
+.bg-accent-orange {
+  background-color: var(--accent-orange);
+}
+
+.bg-accent-red {
+  background-color: var(--accent-red);
+}
+
+.bg-accent-yellow {
+  background-color: var(--accent-yellow);
+}
+
+/* Rich text editor styles */
+.rich-text-editor .ProseMirror {
+  outline: none;
+  padding: 1rem;
+  min-height: 200px;
+}
+
+.rich-text-editor .ProseMirror h1,
+.rich-text-editor .ProseMirror h2,
+.rich-text-editor .ProseMirror h3 {
+  font-weight: 600;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.rich-text-editor .ProseMirror h1 {
+  font-size: 1.5rem;
+}
+
+.rich-text-editor .ProseMirror h2 {
+  font-size: 1.25rem;
+}
+
+.rich-text-editor .ProseMirror h3 {
+  font-size: 1.125rem;
+}
+
+.rich-text-editor .ProseMirror p {
+  margin: 0.5rem 0;
+}
+
+.rich-text-editor .ProseMirror ul,
+.rich-text-editor .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.rich-text-editor .ProseMirror code {
+  background-color: var(--dark-surface);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+}
+
+.rich-text-editor .ProseMirror pre {
+  background-color: var(--dark-surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.rich-text-editor .ProseMirror pre code {
+  background: none;
+  padding: 0;
+}
+
+.rich-text-editor .ProseMirror blockquote {
+  border-left: 4px solid var(--accent-blue);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+}
+
+/* User avatar gradient backgrounds */
+.avatar-gradient-1 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.avatar-gradient-2 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.avatar-gradient-3 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.avatar-gradient-4 {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.avatar-gradient-5 {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.avatar-gradient-6 {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.avatar-gradient-7 {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.avatar-gradient-8 {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
