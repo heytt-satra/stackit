@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { X } from "lucide-react";
+import { X, Upload, Image, Video, FileText } from "lucide-react";
 
 const askQuestionSchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters"),
@@ -31,6 +31,36 @@ interface AskQuestionModalProps {
 export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalProps) {
   const { toast } = useToast();
   const [content, setContent] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter(file => {
+      const isValidType = file.type.startsWith('image/') || file.type.startsWith('video/');
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+      return isValidType && isValidSize;
+    });
+    
+    if (validFiles.length !== files.length) {
+      toast({
+        title: "Warning",
+        description: "Some files were skipped. Only images and videos under 10MB are allowed.",
+        variant: "destructive",
+      });
+    }
+    
+    setUploadedFiles(prev => [...prev, ...validFiles].slice(0, 5)); // Max 5 files
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) return <Image className="h-4 w-4" />;
+    if (file.type.startsWith('video/')) return <Video className="h-4 w-4" />;
+    return <FileText className="h-4 w-4" />;
+  };
   const [tagInput, setTagInput] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -49,19 +79,22 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
   });
 
   const createQuestionMutation = useMutation({
-    mutationFn: async (data: AskQuestionFormData) => {
-      const response = await apiRequest("POST", "/api/questions", {
-        title: data.title,
-        content: content,
-        tags: selectedTags,
+    mutationFn: async (data: AskQuestionFormData & { content: string; tags: string[] }) => {
+      return await apiRequest("/api/questions", {
+        method: "POST",
+        body: JSON.stringify({
+          title: data.title,
+          content: data.content,
+          tags: data.tags,
+        }),
       });
-      return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Your question has been posted!",
+        description: "Your post has been created!",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/questions"] });
       handleClose();
       onSuccess();
     },
@@ -79,9 +112,10 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
       }
       toast({
         title: "Error",
-        description: "Failed to create question. Please try again.",
+        description: "Failed to create post. Please try again.",
         variant: "destructive",
       });
+      console.error("Error creating question:", error);
     },
   });
 
@@ -90,6 +124,7 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
     setContent("");
     setSelectedTags([]);
     setTagInput("");
+    setUploadedFiles([]);
     onClose();
   };
 
@@ -127,13 +162,20 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
     if (!content.trim()) {
       toast({
         title: "Error",
-        description: "Please provide a description for your question.",
+        description: "Please provide content for your post.",
         variant: "destructive",
       });
       return;
     }
 
-    createQuestionMutation.mutate(data);
+    // Include content and tags in the submission
+    const submissionData = {
+      ...data,
+      content: content.trim(),
+      tags: selectedTags
+    };
+
+    createQuestionMutation.mutate(submissionData);
   };
 
   return (
@@ -236,6 +278,60 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
               <p className="text-sm reddit-text-muted mt-1">
                 Separate tags with commas or press Enter. Maximum 5 tags.
               </p>
+            </div>
+          </div>
+
+          {/* Media Upload Section */}
+          <div>
+            <Label className="text-sm font-medium reddit-text">
+              Media (Optional)
+            </Label>
+            <div className="mt-2">
+              <div className="border-2 border-dashed reddit-border rounded-lg p-6 text-center hover:reddit-hover transition-colors">
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  <Upload className="h-8 w-8 reddit-text-muted mx-auto mb-2" />
+                  <p className="reddit-text text-sm">
+                    Drag & drop images or videos here, or click to browse
+                  </p>
+                  <p className="reddit-text-muted text-xs mt-1">
+                    Max 5 files, 10MB each. Images and videos only.
+                  </p>
+                </label>
+              </div>
+
+              {/* Uploaded Files Preview */}
+              {uploadedFiles.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between reddit-card rounded-lg p-3 border reddit-border">
+                      <div className="flex items-center space-x-3">
+                        {getFileIcon(file)}
+                        <div>
+                          <p className="reddit-text text-sm font-medium">{file.name}</p>
+                          <p className="reddit-text-muted text-xs">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="reddit-text-muted hover:reddit-text p-1"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
