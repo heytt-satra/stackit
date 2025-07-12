@@ -69,43 +69,59 @@ export class DatabaseStorage implements IStorage {
 
   // Question operations
   async getQuestions(offset = 0, limit = 20, filter = "newest"): Promise<any[]> {
-    let orderBy;
-    switch (filter) {
-      case "unanswered":
-        orderBy = desc(questions.createdAt);
-        break;
-      case "newest":
-      default:
-        orderBy = desc(questions.createdAt);
-        break;
+    try {
+      console.log("getQuestions called with:", { offset, limit, filter });
+      
+      let orderBy;
+      switch (filter) {
+        case "unanswered":
+          orderBy = desc(questions.createdAt);
+          break;
+        case "newest":
+        default:
+          orderBy = desc(questions.createdAt);
+          break;
+      }
+
+      console.log("Executing database query...");
+      
+      const result = await db
+        .select({
+          question: questions,
+          author: users,
+          voteCount: sql<number>`COALESCE(SUM(${questionVotes.voteType}), 0)`,
+          answerCount: sql<number>`COUNT(DISTINCT ${answers.id})`,
+          tags: sql<string>`STRING_AGG(${tags.name}, ',')`,
+        })
+        .from(questions)
+        .leftJoin(users, eq(questions.authorId, users.id))
+        .leftJoin(questionVotes, eq(questions.id, questionVotes.questionId))
+        .leftJoin(answers, eq(questions.id, answers.questionId))
+        .leftJoin(questionTags, eq(questions.id, questionTags.questionId))
+        .leftJoin(tags, eq(questionTags.tagId, tags.id))
+        .groupBy(questions.id, users.id)
+        .orderBy(orderBy)
+        .offset(offset)
+        .limit(limit);
+
+      console.log("Database query completed, raw result length:", result.length);
+      
+      const mappedResult = result.map(row => ({
+        ...row.question,
+        author: row.author,
+        voteCount: row.voteCount,
+        answerCount: row.answerCount,
+        tags: row.tags ? row.tags.split(',').filter(Boolean) : [],
+      }));
+      
+      console.log("Mapped result length:", mappedResult.length);
+      console.log("Sample mapped question:", mappedResult[0]);
+      
+      return mappedResult;
+    } catch (error) {
+      console.error("Error in getQuestions:", error);
+      throw error;
     }
-
-    const result = await db
-      .select({
-        question: questions,
-        author: users,
-        voteCount: sql<number>`COALESCE(SUM(${questionVotes.voteType}), 0)`,
-        answerCount: sql<number>`COUNT(DISTINCT ${answers.id})`,
-        tags: sql<string>`STRING_AGG(${tags.name}, ',')`,
-      })
-      .from(questions)
-      .leftJoin(users, eq(questions.authorId, users.id))
-      .leftJoin(questionVotes, eq(questions.id, questionVotes.questionId))
-      .leftJoin(answers, eq(questions.id, answers.questionId))
-      .leftJoin(questionTags, eq(questions.id, questionTags.questionId))
-      .leftJoin(tags, eq(questionTags.tagId, tags.id))
-      .groupBy(questions.id, users.id)
-      .orderBy(orderBy)
-      .offset(offset)
-      .limit(limit);
-
-    return result.map(row => ({
-      ...row.question,
-      author: row.author,
-      voteCount: row.voteCount,
-      answerCount: row.answerCount,
-      tags: row.tags ? row.tags.split(',').filter(Boolean) : [],
-    }));
   }
 
   async getQuestionById(id: number): Promise<any | undefined> {
@@ -139,19 +155,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuestion(question: InsertQuestion, tagNames: string[]): Promise<Question> {
-    const [newQuestion] = await db.insert(questions).values(question).returning();
-    
-    if (tagNames.length > 0) {
-      const createdTags = await this.getOrCreateTags(tagNames);
-      await db.insert(questionTags).values(
-        createdTags.map(tag => ({
-          questionId: newQuestion.id,
-          tagId: tag.id,
-        }))
-      );
+    try {
+      console.log("Creating question with data:", question);
+      console.log("Tag names:", tagNames);
+      
+      const [newQuestion] = await db.insert(questions).values(question).returning();
+      console.log("Created question:", newQuestion);
+      
+      if (tagNames.length > 0) {
+        console.log("Creating tags...");
+        const createdTags = await this.getOrCreateTags(tagNames);
+        console.log("Created tags:", createdTags);
+        
+        await db.insert(questionTags).values(
+          createdTags.map(tag => ({
+            questionId: newQuestion.id,
+            tagId: tag.id,
+          }))
+        );
+        console.log("Linked tags to question");
+      }
+      
+      return newQuestion;
+    } catch (error) {
+      console.error("Error in createQuestion:", error);
+      throw error;
     }
-    
-    return newQuestion;
   }
 
   async voteQuestion(questionId: number, userId: string, voteType: number): Promise<void> {

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ClerkProvider, SignIn, SignUp } from "@clerk/clerk-react";
 import { useAuth } from "@/hooks/useAuth";
+import { UserSync } from "@/components/UserSync";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
@@ -23,20 +24,23 @@ function Router() {
   }
 
   return (
-    <Switch>
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/sign-in" component={SignIn} />
-          <Route path="/sign-up" component={SignUp} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      {isAuthenticated && <UserSync />}
+      <Switch>
+        {!isAuthenticated ? (
+          <>
+            <Route path="/" component={Landing} />
+            <Route path="/sign-in" component={SignIn} />
+            <Route path="/sign-up" component={SignUp} />
+          </>
+        ) : (
+          <>
+            <Route path="/" component={Home} />
+          </>
+        )}
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 

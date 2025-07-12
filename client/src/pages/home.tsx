@@ -36,7 +36,24 @@ export default function Home() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: questions = [], isLoading: questionsLoading, refetch } = useQuery({
-    queryKey: ["/api/questions", { page: currentPage, filter, search: searchQuery }],
+    queryKey: ["/api/questions", currentPage, filter, searchQuery],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (currentPage > 1) params.append('page', currentPage.toString());
+      if (filter !== 'newest') params.append('filter', filter);
+      if (searchQuery) params.append('q', searchQuery);
+      
+      const url = `/api/questions${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await fetch(url, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch questions: ${response.status}`);
+      }
+      
+      return response.json();
+    },
     enabled: isAuthenticated,
     retry: false,
   });

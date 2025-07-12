@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useClerk } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface NavbarProps {
 export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
   const { user } = useAuth();
   const { signOut } = useClerk();
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -24,6 +26,10 @@ export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
 
   const handleLogout = () => {
     signOut();
+  };
+
+  const handleLogoClick = () => {
+    setLocation("/");
   };
 
   const getUserInitials = (user: any) => {
@@ -61,7 +67,10 @@ export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center h-12">
           {/* Logo */}
-          <div className="flex items-center space-x-2 mr-6">
+          <div 
+            className="flex items-center space-x-2 mr-6 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={handleLogoClick}
+          >
             <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">S</span>
             </div>

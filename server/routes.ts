@@ -5,17 +5,46 @@ import { insertQuestionSchema, insertAnswerSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // User routes
+  app.post('/api/users', async (req, res) => {
+    try {
+      const { id, email, firstName, lastName, profileImageUrl } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      const user = await storage.upsertUser({
+        id,
+        email,
+        firstName,
+        lastName,
+        profileImageUrl,
+      });
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error creating/updating user:", error);
+      res.status(500).json({ message: "Failed to create/update user" });
+    }
+  });
+
   // Question routes
   app.get('/api/questions', async (req, res) => {
     try {
       const { page = '1', limit = '20', filter = 'newest' } = req.query;
       const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
       
+      console.log("Fetching questions with params:", { page, limit, filter, offset });
+      
       const questions = await storage.getQuestions(
         offset,
         parseInt(limit as string),
         filter as string
       );
+      
+      console.log("Retrieved questions:", questions.length);
+      console.log("First question sample:", questions[0]);
       
       res.json(questions);
     } catch (error) {
@@ -48,8 +77,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { tags, authorId, ...questionData } = req.body;
       
+      console.log("Received question data:", { tags, authorId, ...questionData });
+      
       if (!authorId) {
         return res.status(400).json({ message: "Author ID is required" });
+      }
+      
+      // Check if user exists, if not create them
+      let user = await storage.getUser(authorId);
+      if (!user) {
+        console.log("User not found, creating user with ID:", authorId);
+        // Create a basic user record - you might want to get more user data from Clerk
+        user = await storage.upsertUser({
+          id: authorId,
+          email: null,
+          firstName: null,
+          lastName: null,
+          profileImageUrl: null,
+        });
+        console.log("Created user:", user);
       }
       
       const validatedData = insertQuestionSchema.parse({
@@ -57,10 +103,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         authorId,
       });
       
+      console.log("Validated data:", validatedData);
+      
       const tagNames = Array.isArray(tags) ? tags : 
         typeof tags === 'string' ? tags.split(',').map((t: string) => t.trim()) : [];
       
+      console.log("Tag names:", tagNames);
+      
       const question = await storage.createQuestion(validatedData, tagNames);
+      console.log("Created question:", question);
       res.json(question);
     } catch (error) {
       console.error("Error creating question:", error);
