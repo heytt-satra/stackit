@@ -97,7 +97,7 @@ export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2 p-1 h-8">
+                  <Button variant="ghost" className="flex items-center space-x-2 p-1 h-8 cursor-pointer">
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={user.profileImageUrl} />
                       <AvatarFallback className={`text-white text-xs font-semibold ${getAvatarGradient(user)}`}>
@@ -111,6 +111,12 @@ export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="reddit-surface border reddit-border">
+                  <DropdownMenuItem 
+                    onClick={() => setLocation("/profile")} 
+                    className="reddit-text hover:reddit-hover cursor-pointer"
+                  >
+                    Profile & Settings
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="reddit-text hover:reddit-hover">
                     Logout
                   </DropdownMenuItem>

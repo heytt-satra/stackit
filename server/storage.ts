@@ -325,6 +325,99 @@ export class DatabaseStorage implements IStorage {
       tags: row.tags ? row.tags.split(',').filter(Boolean) : [],
     }));
   }
+
+  // User statistics operations
+  async getUserStatistics(userId: string): Promise<{
+    questionsAsked: number;
+    answersGiven: number;
+    votesCast: number;
+  }> {
+    try {
+      // Get questions asked
+      const questionsResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(questions)
+        .where(eq(questions.authorId, userId));
+      
+      const questionsAsked = questionsResult[0]?.count || 0;
+
+      // Get answers given
+      const answersResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(answers)
+        .where(eq(answers.authorId, userId));
+      
+      const answersGiven = answersResult[0]?.count || 0;
+
+      // Get votes cast (both question and answer votes)
+      const questionVotesResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(questionVotes)
+        .where(eq(questionVotes.userId, userId));
+      
+      const answerVotesResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(answerVotes)
+        .where(eq(answerVotes.userId, userId));
+      
+      const votesCast = (questionVotesResult[0]?.count || 0) + (answerVotesResult[0]?.count || 0);
+
+      return {
+        questionsAsked,
+        answersGiven,
+        votesCast,
+      };
+    } catch (error) {
+      console.error("Error getting user statistics:", error);
+      throw error;
+    }
+  }
+
+  async getUserQuestions(userId: string): Promise<any[]> {
+    const result = await db
+      .select({
+        question: questions,
+        voteCount: sql<number>`COALESCE(SUM(${questionVotes.voteType}), 0)`,
+        answerCount: sql<number>`COUNT(DISTINCT ${answers.id})`,
+        tags: sql<string>`STRING_AGG(${tags.name}, ',')`,
+      })
+      .from(questions)
+      .leftJoin(questionVotes, eq(questions.id, questionVotes.questionId))
+      .leftJoin(answers, eq(questions.id, answers.questionId))
+      .leftJoin(questionTags, eq(questions.id, questionTags.questionId))
+      .leftJoin(tags, eq(questionTags.tagId, tags.id))
+      .where(eq(questions.authorId, userId))
+      .groupBy(questions.id)
+      .orderBy(desc(questions.createdAt));
+
+    return result.map(row => ({
+      ...row.question,
+      voteCount: row.voteCount,
+      answerCount: row.answerCount,
+      tags: row.tags ? row.tags.split(',').filter(Boolean) : [],
+    }));
+  }
+
+  async getUserAnswers(userId: string): Promise<any[]> {
+    const result = await db
+      .select({
+        answer: answers,
+        question: questions,
+        voteCount: sql<number>`COALESCE(SUM(${answerVotes.voteType}), 0)`,
+      })
+      .from(answers)
+      .leftJoin(questions, eq(answers.questionId, questions.id))
+      .leftJoin(answerVotes, eq(answers.id, answerVotes.answerId))
+      .where(eq(answers.authorId, userId))
+      .groupBy(answers.id, questions.id)
+      .orderBy(desc(answers.createdAt));
+
+    return result.map(row => ({
+      ...row.answer,
+      question: row.question,
+      voteCount: row.voteCount,
+    }));
+  }
 }
 
 export const storage = new DatabaseStorage();

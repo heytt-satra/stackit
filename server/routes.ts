@@ -29,6 +29,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/users/:id/statistics', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      const statistics = await storage.getUserStatistics(userId);
+      res.json(statistics);
+    } catch (error) {
+      console.error("Error fetching user statistics:", error);
+      res.status(500).json({ message: "Failed to fetch user statistics" });
+    }
+  });
+
+  app.get('/api/users/:id/questions', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      const questions = await storage.getUserQuestions(userId);
+      res.json(questions);
+    } catch (error) {
+      console.error("Error fetching user questions:", error);
+      res.status(500).json({ message: "Failed to fetch user questions" });
+    }
+  });
+
+  app.get('/api/users/:id/answers', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      const answers = await storage.getUserAnswers(userId);
+      res.json(answers);
+    } catch (error) {
+      console.error("Error fetching user answers:", error);
+      res.status(500).json({ message: "Failed to fetch user answers" });
+    }
+  });
+
   // Question routes
   app.get('/api/questions', async (req, res) => {
     try {
