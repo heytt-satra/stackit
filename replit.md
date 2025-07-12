@@ -4,9 +4,11 @@
 
 StackIt is a minimal question-and-answer platform designed for collaborative learning and structured knowledge sharing. The application is built as a full-stack web application with a React frontend and Express.js backend, featuring real-time interactions, rich text editing, and a comprehensive voting system.
 
-## User Preferences
+## ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+- **Communication style**: Simple, everyday language
+- **Design preference**: Reddit-style interface over Stack Overflow-style
+- **Color scheme**: Orange accent colors (#FF5722) for branding and CTAs
 
 ## System Architecture
 
@@ -58,12 +60,15 @@ Preferred communication style: Simple, everyday language.
 - **Request logging** for API monitoring
 
 ### Frontend Features
+- **Reddit-style layout** with card-based feed design
+- **Orange accent theme** (#FF5722) with dark background
 - **Responsive design** with mobile-first approach
 - **Rich text editor** for formatting questions and answers
-- **Real-time voting** with optimistic updates
+- **Real-time voting** with Reddit-style up/down arrows
 - **Search functionality** across questions
 - **Tag-based filtering** and organization
 - **Modal-based interactions** for creating content
+- **Community sidebar** with stats and popular tags
 
 ## Data Flow
 
@@ -124,5 +129,15 @@ Preferred communication style: Simple, everyday language.
 - `SESSION_SECRET`: Session encryption key
 - `REPL_ID`: Replit environment identifier
 - `ISSUER_URL`: OpenID Connect issuer (defaults to Replit)
+
+## Recent Changes
+
+**July 12, 2025**: 
+- ✓ Fixed question posting functionality - resolved database errors and form submission issues
+- ✓ Redesigned interface from Stack Overflow-style to Reddit-style layout
+- ✓ Updated color scheme to orange accent theme (#FF5722) 
+- ✓ Implemented Reddit-style voting arrows and card layout
+- ✓ Added community sidebar with member stats and popular tags
+- ✓ Updated all UI components to use new Reddit-style classes and colors
 
 The application follows a monorepo structure with clear separation between client, server, and shared code, enabling efficient development and deployment workflows.

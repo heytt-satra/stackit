@@ -43,6 +43,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/questions/:id', async (req, res) => {
     try {
       const questionId = parseInt(req.params.id);
+      if (isNaN(questionId)) {
+        return res.status(400).json({ message: "Invalid question ID" });
+      }
+      
       const question = await storage.getQuestionById(questionId);
       
       if (!question) {

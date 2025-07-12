@@ -24,19 +24,18 @@
   --ring: hsl(240, 4.9%, 83.9%);
   --radius: 0.5rem;
   
-  /* Custom StackIt colors */
-  --dark-bg: hsl(220, 26%, 6%);
-  --dark-secondary: hsl(220, 23%, 9%);
-  --dark-surface: hsl(220, 20%, 13%);
-  --dark-border: hsl(220, 15%, 19%);
-  --dark-text: hsl(210, 40%, 98%);
-  --dark-text-secondary: hsl(218, 11%, 65%);
-  --accent-green: hsl(142, 71%, 45%);
-  --accent-blue: hsl(207, 90%, 54%);
-  --accent-purple: hsl(270, 61%, 64%);
-  --accent-orange: hsl(25, 95%, 53%);
-  --accent-red: hsl(5, 81%, 53%);
-  --accent-yellow: hsl(45, 100%, 38%);
+  /* Reddit-style dark theme colors */
+  --reddit-bg: hsl(222, 16%, 7%);
+  --reddit-card: hsl(222, 16%, 11%);
+  --reddit-surface: hsl(222, 16%, 15%);
+  --reddit-border: hsl(222, 16%, 20%);
+  --reddit-text: hsl(0, 0%, 95%);
+  --reddit-text-muted: hsl(0, 0%, 70%);
+  --reddit-text-dim: hsl(0, 0%, 55%);
+  --reddit-upvote: hsl(14, 100%, 57%);
+  --reddit-downvote: hsl(230, 100%, 69%);
+  --reddit-accent: hsl(14, 100%, 57%);
+  --reddit-hover: hsl(222, 16%, 18%);
 }
 
 .dark {
@@ -67,35 +66,53 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
-    background-color: var(--dark-bg);
-    color: var(--dark-text);
+    @apply font-sans antialiased;
+    background-color: var(--reddit-bg);
+    color: var(--reddit-text);
+    font-size: 14px;
+    line-height: 1.4;
   }
 }
 
-/* Custom utilities for StackIt theme */
-.dark-bg {
-  background-color: var(--dark-bg);
+/* Reddit-style utilities */
+.reddit-bg {
+  background-color: var(--reddit-bg);
 }
 
-.dark-secondary {
-  background-color: var(--dark-secondary);
+.reddit-card {
+  background-color: var(--reddit-card);
 }
 
-.dark-surface {
-  background-color: var(--dark-surface);
+.reddit-surface {
+  background-color: var(--reddit-surface);
 }
 
-.dark-border {
-  border-color: var(--dark-border);
+.reddit-border {
+  border-color: var(--reddit-border);
 }
 
-.dark-text {
-  color: var(--dark-text);
+.reddit-text {
+  color: var(--reddit-text);
 }
 
-.dark-text-secondary {
-  color: var(--dark-text-secondary);
+.reddit-text-muted {
+  color: var(--reddit-text-muted);
+}
+
+.reddit-text-dim {
+  color: var(--reddit-text-dim);
+}
+
+.reddit-hover:hover {
+  background-color: var(--reddit-hover);
+}
+
+.reddit-upvote {
+  color: var(--reddit-upvote);
+}
+
+.reddit-downvote {
+  color: var(--reddit-downvote);
 }
 
 .accent-green {

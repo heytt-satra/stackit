@@ -72,101 +72,140 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen dark-bg">
+    <div className="min-h-screen reddit-bg">
       <Navbar onSearch={handleSearch} onAskQuestion={() => setIsAskModalOpen(true)} />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <div>
-            <h2 className="text-3xl font-bold dark-text">All Questions</h2>
-            <p className="dark-text-secondary mt-1">
-              {questions.length} questions
-            </p>
-          </div>
-          
-          {/* Mobile Ask Button */}
-          <Button 
-            onClick={() => setIsAskModalOpen(true)}
-            className="md:hidden mt-4 bg-accent-blue hover:bg-blue-600"
-          >
-            Ask Question
-          </Button>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-full sm:w-48 dark-surface border dark-border">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="dark-surface border dark-border">
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="unanswered">Unanswered</SelectItem>
-              <SelectItem value="most-voted">Most Voted</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Question List */}
-        <div className="space-y-4">
-          {questionsLoading ? (
-            <div className="text-center py-8">
-              <div className="text-lg dark-text-secondary">Loading questions...</div>
+      {/* Reddit-style layout */}
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="flex gap-4">
+          {/* Main content */}
+          <main className="flex-1 max-w-2xl">
+            {/* Create Post Bar */}
+            <div className="reddit-card rounded-lg border reddit-border p-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0"></div>
+                <button 
+                  onClick={() => setIsAskModalOpen(true)}
+                  className="flex-1 text-left reddit-surface rounded-lg px-4 py-2 reddit-text-muted hover:reddit-hover transition-colors"
+                >
+                  Create Post
+                </button>
+                <Button 
+                  onClick={() => setIsAskModalOpen(true)}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-6"
+                >
+                  Post
+                </Button>
+              </div>
             </div>
-          ) : questions.length === 0 ? (
-            <div className="text-center py-16">
-              <h3 className="text-xl font-semibold dark-text mb-2">No questions found</h3>
-              <p className="dark-text-secondary mb-4">
-                {searchQuery ? "Try adjusting your search terms" : "Be the first to ask a question!"}
+
+            {/* Sort Options */}
+            <div className="flex items-center gap-2 mb-4">
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-32 reddit-surface border reddit-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="reddit-surface border reddit-border">
+                  <SelectItem value="newest">New</SelectItem>
+                  <SelectItem value="unanswered">Hot</SelectItem>
+                  <SelectItem value="most-voted">Top</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Question Feed */}
+            <div className="space-y-2">
+              {questionsLoading ? (
+                <div className="text-center py-8">
+                  <div className="text-lg reddit-text-muted">Loading posts...</div>
+                </div>
+              ) : questions.length === 0 ? (
+                <div className="text-center py-16 reddit-card rounded-lg border reddit-border">
+                  <h3 className="text-xl font-semibold reddit-text mb-2">No posts yet</h3>
+                  <p className="reddit-text-muted mb-4">
+                    {searchQuery ? "Try adjusting your search terms" : "Be the first to create a post!"}
+                  </p>
+                  <Button 
+                    onClick={() => setIsAskModalOpen(true)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                  >
+                    Create Post
+                  </Button>
+                </div>
+              ) : (
+                questions.map((question: any) => (
+                  <QuestionCard
+                    key={question.id}
+                    question={question}
+                    onClick={() => handleQuestionClick(question.id)}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Pagination */}
+            {questions.length > 0 && (
+              <div className="flex justify-center items-center space-x-2 pt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="border reddit-border hover:reddit-hover"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="px-4 py-2 reddit-text">
+                  Page {currentPage}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={questions.length < 20}
+                  className="border reddit-border hover:reddit-hover"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </main>
+
+          {/* Sidebar */}
+          <aside className="w-80 hidden lg:block">
+            <div className="reddit-card rounded-lg border reddit-border p-4 mb-4">
+              <h3 className="font-semibold reddit-text mb-3">About Community</h3>
+              <p className="reddit-text-muted text-sm mb-4">
+                A place for developers to ask questions, share knowledge, and help each other grow.
               </p>
-              <Button 
-                onClick={() => setIsAskModalOpen(true)}
-                className="bg-accent-blue hover:bg-blue-600"
-              >
-                Ask the first question
-              </Button>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="reddit-text-muted">Members</span>
+                  <span className="reddit-text">1,234</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="reddit-text-muted">Online</span>
+                  <span className="reddit-text">56</span>
+                </div>
+              </div>
             </div>
-          ) : (
-            questions.map((question: any) => (
-              <QuestionCard
-                key={question.id}
-                question={question}
-                onClick={() => handleQuestionClick(question.id)}
-              />
-            ))
-          )}
-        </div>
 
-        {/* Pagination */}
-        {questions.length > 0 && (
-          <div className="flex justify-center items-center space-x-2 pt-8">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="border dark-border hover:dark-surface"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <span className="px-4 py-2 dark-text">
-              Page {currentPage}
-            </span>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => p + 1)}
-              disabled={questions.length < 20}
-              className="border dark-border hover:dark-surface"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </main>
+            <div className="reddit-card rounded-lg border reddit-border p-4">
+              <h3 className="font-semibold reddit-text mb-3">Popular Tags</h3>
+              <div className="space-y-2">
+                {['javascript', 'python', 'react', 'css', 'html'].map((tag) => (
+                  <div key={tag} className="flex items-center justify-between">
+                    <span className="reddit-text-muted text-sm">#{tag}</span>
+                    <span className="reddit-text-dim text-xs">42 posts</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
 
       {/* Modals */}
       <AskQuestionModal 

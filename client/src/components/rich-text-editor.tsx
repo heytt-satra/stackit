@@ -47,15 +47,15 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   }
 
   return (
-    <div className="border dark-border rounded-lg dark-surface">
+    <div className="border reddit-border rounded-lg reddit-card">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b dark-border">
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b reddit-border">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('bold') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('bold') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -65,7 +65,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('italic') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('italic') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -75,7 +75,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('strike') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('strike') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <Strikethrough className="h-4 w-4" />
         </Button>
@@ -87,7 +87,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('bulletList') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('bulletList') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <List className="h-4 w-4" />
         </Button>
@@ -97,7 +97,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('orderedList') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('orderedList') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
@@ -109,7 +109,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleCode().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('code') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('code') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <Code className="h-4 w-4" />
         </Button>
@@ -119,7 +119,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('codeBlock') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('codeBlock') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <Code className="h-4 w-4" />
         </Button>
@@ -129,7 +129,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`p-2 h-8 w-8 ${editor.isActive('blockquote') ? 'bg-accent-blue' : 'hover:dark-border'}`}
+          className={`p-2 h-8 w-8 ${editor.isActive('blockquote') ? 'bg-orange-500' : 'hover:reddit-hover'}`}
         >
           <Quote className="h-4 w-4" />
         </Button>
@@ -142,7 +142,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           size="sm"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          className="p-2 h-8 w-8 hover:dark-border"
+          className="p-2 h-8 w-8 hover:reddit-hover"
         >
           <Undo className="h-4 w-4" />
         </Button>
@@ -153,7 +153,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           size="sm"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          className="p-2 h-8 w-8 hover:dark-border"
+          className="p-2 h-8 w-8 hover:reddit-hover"
         >
           <Redo className="h-4 w-4" />
         </Button>
@@ -162,7 +162,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       {/* Editor Content */}
       <EditorContent 
         editor={editor} 
-        className="p-4 min-h-[200px] dark-text"
+        className="p-4 min-h-[200px] reddit-text"
       />
     </div>
   );

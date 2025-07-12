@@ -55,77 +55,58 @@ export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
   };
 
   return (
-    <header className="dark-secondary border-b dark-border sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header className="reddit-surface border-b reddit-border sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center h-12">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold dark-text">StackIt</h1>
+          <div className="flex items-center space-x-2 mr-6">
+            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">S</span>
+            </div>
+            <h1 className="text-xl font-bold reddit-text">StackIt</h1>
           </div>
 
           {/* Search Bar */}
-          <div className="hidden sm:flex flex-1 max-w-2xl mx-8">
-            <form onSubmit={handleSearch} className="relative w-full">
+          <div className="flex-1 max-w-md">
+            <form onSubmit={handleSearch} className="relative">
               <Input
                 type="text"
-                placeholder="Search questions..."
+                placeholder="Search StackIt"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full dark-surface border dark-border pl-10 dark-text placeholder:dark-text-secondary focus:ring-2 focus:ring-blue-500"
+                className="w-full reddit-card border reddit-border pl-10 reddit-text placeholder:reddit-text-muted focus:ring-2 focus:ring-orange-500 text-sm h-9"
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 dark-text-secondary" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 reddit-text-muted" />
             </form>
           </div>
 
-          {/* User Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Ask Question Button */}
-            <Button 
-              onClick={onAskQuestion}
-              className="hidden md:flex bg-accent-blue hover:bg-blue-600"
-            >
-              Ask Question
-            </Button>
-
+          {/* Right side actions */}
+          <div className="flex items-center space-x-3 ml-6">
             {/* User Menu */}
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2 p-2">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" className="flex items-center space-x-2 p-1 h-8">
+                    <Avatar className="h-6 w-6">
                       <AvatarImage src={user.profileImageUrl} />
-                      <AvatarFallback className={`text-white text-sm font-semibold ${getAvatarGradient(user)}`}>
+                      <AvatarFallback className={`text-white text-xs font-semibold ${getAvatarGradient(user)}`}>
                         {getUserInitials(user)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:block dark-text text-sm">
+                    <span className="hidden sm:block reddit-text text-sm">
                       {getUserDisplayName(user)}
                     </span>
-                    <ChevronDown className="h-4 w-4 dark-text-secondary" />
+                    <ChevronDown className="h-3 w-3 reddit-text-muted" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="dark-surface border dark-border">
-                  <DropdownMenuItem onClick={handleLogout} className="dark-text hover:dark-surface">
+                <DropdownMenuContent className="reddit-surface border reddit-border">
+                  <DropdownMenuItem onClick={handleLogout} className="reddit-text hover:reddit-hover">
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
           </div>
-        </div>
-
-        {/* Mobile Search */}
-        <div className="sm:hidden pb-4">
-          <form onSubmit={handleSearch} className="relative">
-            <Input
-              type="text"
-              placeholder="Search questions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full dark-surface border dark-border pl-10 dark-text placeholder:dark-text-secondary"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 dark-text-secondary" />
-          </form>
         </div>
       </div>
     </header>

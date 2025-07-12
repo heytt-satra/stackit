@@ -138,21 +138,21 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto dark-secondary border dark-border">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto reddit-surface border reddit-border">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold dark-text">Ask a Question</DialogTitle>
+          <DialogTitle className="text-2xl font-bold reddit-text">Create a post</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Title Field */}
           <div>
-            <Label htmlFor="title" className="text-sm font-medium dark-text">
+            <Label htmlFor="title" className="text-sm font-medium reddit-text">
               Title <span className="text-red-400">*</span>
             </Label>
             <Input
               id="title"
-              placeholder="What's your programming question? Be specific."
-              className="mt-2 dark-surface border dark-border dark-text placeholder:dark-text-secondary"
+              placeholder="An interesting title for your post"
+              className="mt-2 reddit-card border reddit-border reddit-text placeholder:reddit-text-muted"
               {...form.register("title")}
             />
             {form.formState.errors.title && (
@@ -162,8 +162,8 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
 
           {/* Description Field */}
           <div>
-            <Label className="text-sm font-medium dark-text">
-              Description <span className="text-red-400">*</span>
+            <Label className="text-sm font-medium reddit-text">
+              Text <span className="text-red-400">*</span>
             </Label>
             <div className="mt-2">
               <RichTextEditor
@@ -176,7 +176,7 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
 
           {/* Tags Field */}
           <div>
-            <Label className="text-sm font-medium dark-text">
+            <Label className="text-sm font-medium reddit-text">
               Tags <span className="text-red-400">*</span>
             </Label>
             <div className="mt-2">
@@ -185,7 +185,7 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagInputKeyDown}
-                className="dark-surface border dark-border dark-text placeholder:dark-text-secondary"
+                className="reddit-card border reddit-border reddit-text placeholder:reddit-text-muted"
                 disabled={selectedTags.length >= 5}
               />
               
@@ -196,7 +196,7 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="dark-surface border dark-border flex items-center gap-1"
+                      className="reddit-card border reddit-border flex items-center gap-1"
                     >
                       {tag}
                       <button
@@ -214,7 +214,7 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
               {/* Popular Tags Suggestions */}
               {availableTags.length > 0 && selectedTags.length < 5 && (
                 <div className="mt-2">
-                  <p className="text-sm dark-text-secondary mb-2">Popular tags:</p>
+                  <p className="text-sm reddit-text-muted mb-2">Popular tags:</p>
                   <div className="flex flex-wrap gap-2">
                     {availableTags.slice(0, 10).map((tag: any) => (
                       <Button
@@ -223,7 +223,7 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddTag(tag.name)}
-                        className="text-xs border dark-border hover:dark-surface"
+                        className="text-xs border reddit-border hover:reddit-hover"
                         disabled={selectedTags.includes(tag.name)}
                       >
                         {tag.name}
@@ -233,28 +233,28 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
                 </div>
               )}
               
-              <p className="text-sm dark-text-secondary mt-1">
+              <p className="text-sm reddit-text-muted mt-1">
                 Separate tags with commas or press Enter. Maximum 5 tags.
               </p>
             </div>
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-4 pt-6 border-t dark-border">
+          <div className="flex justify-end space-x-4 pt-6 border-t reddit-border">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
-              className="border dark-border hover:dark-surface"
+              className="border reddit-border hover:reddit-hover"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={createQuestionMutation.isPending}
-              className="bg-accent-blue hover:bg-blue-600"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
             >
-              {createQuestionMutation.isPending ? "Posting..." : "Post Question"}
+              {createQuestionMutation.isPending ? "Posting..." : "Post"}
             </Button>
           </div>
         </form>

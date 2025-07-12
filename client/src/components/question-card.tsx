@@ -51,66 +51,80 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
 
   return (
     <article 
-      className="dark-surface border dark-border rounded-lg p-6 hover:border-gray-500 transition-colors cursor-pointer"
+      className="reddit-card border reddit-border rounded-lg hover:reddit-hover transition-colors cursor-pointer"
       onClick={onClick}
     >
-      <div className="flex flex-col lg:flex-row lg:items-start space-y-4 lg:space-y-0 lg:space-x-6">
-        {/* Question Stats */}
-        <div className="flex lg:flex-col space-x-6 lg:space-x-0 lg:space-y-2 text-sm dark-text-secondary">
-          <div className="text-center">
-            <div className="text-lg font-semibold dark-text">{question.voteCount || 0}</div>
-            <div>votes</div>
-          </div>
-          <div className="text-center">
-            <div className={`text-lg font-semibold ${question.answerCount > 0 ? 'accent-green' : 'dark-text'}`}>
-              {question.answerCount || 0}
+      <div className="flex">
+        {/* Vote section */}
+        <div className="w-10 flex flex-col items-center py-3 px-2">
+          <button className="p-1 hover:bg-gray-600 rounded">
+            <div className="w-5 h-5 text-gray-400 hover:text-orange-500">
+              ▲
             </div>
-            <div>answers</div>
-          </div>
+          </button>
+          <span className="text-sm font-semibold reddit-text my-1">
+            {question.voteCount || 0}
+          </span>
+          <button className="p-1 hover:bg-gray-600 rounded">
+            <div className="w-5 h-5 text-gray-400 hover:text-blue-500">
+              ▼
+            </div>
+          </button>
         </div>
 
-        {/* Question Content */}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-semibold accent-blue hover:text-blue-400 mb-2">
+        {/* Content */}
+        <div className="flex-1 p-3 pl-0">
+          {/* Post metadata */}
+          <div className="flex items-center text-xs reddit-text-dim mb-2">
+            <span>r/StackIt</span>
+            <span className="mx-1">•</span>
+            <span>Posted by</span>
+            <div className="flex items-center ml-1">
+              <span className="reddit-text hover:underline">
+                u/{getUserDisplayName(question.author)}
+              </span>
+            </div>
+            <span className="ml-1">{timeAgo}</span>
+          </div>
+
+          {/* Title */}
+          <h3 className="text-lg font-medium reddit-text mb-2 hover:underline">
             {question.title}
           </h3>
           
-          <p className="dark-text-secondary mb-4 line-clamp-2">
-            {question.content?.replace(/<[^>]*>/g, '').substring(0, 200)}...
+          {/* Content preview */}
+          <p className="reddit-text-muted text-sm mb-3 line-clamp-2">
+            {question.content?.replace(/<[^>]*>/g, '').substring(0, 150)}...
           </p>
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {question.tags?.map((tag: string, index: number) => (
-              <Badge 
-                key={index} 
-                variant="outline" 
-                className="dark-bg accent-blue border dark-border text-xs"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Question Meta */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-            <div className="flex items-center space-x-2">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={question.author?.profileImageUrl} />
-                <AvatarFallback className={`text-white text-xs font-semibold ${getAvatarGradient(question.author)}`}>
-                  {getUserInitials(question.author)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center space-x-1">
-                <span className={`${getBadgeColors(getUserDisplayName(question.author))} text-white px-2 py-0.5 rounded text-xs font-medium`}>
-                  {getUserDisplayName(question.author)}
+          {question.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {question.tags.slice(0, 3).map((tag: string, index: number) => (
+                <span 
+                  key={index}
+                  className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full"
+                >
+                  {tag}
                 </span>
-                <span className="dark-text-secondary text-sm">User Name</span>
-              </div>
+              ))}
             </div>
-            <div className="dark-text-secondary text-sm">
-              asked {timeAgo}
-            </div>
+          )}
+
+          {/* Action bar */}
+          <div className="flex items-center gap-4 text-xs reddit-text-dim">
+            <button className="flex items-center gap-1 hover:bg-gray-700 px-2 py-1 rounded">
+              <span>💬</span>
+              <span>{question.answerCount || 0} Comments</span>
+            </button>
+            <button className="flex items-center gap-1 hover:bg-gray-700 px-2 py-1 rounded">
+              <span>📤</span>
+              <span>Share</span>
+            </button>
+            <button className="flex items-center gap-1 hover:bg-gray-700 px-2 py-1 rounded">
+              <span>💾</span>
+              <span>Save</span>
+            </button>
           </div>
         </div>
       </div>

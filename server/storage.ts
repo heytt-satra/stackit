@@ -142,9 +142,9 @@ export class DatabaseStorage implements IStorage {
     const [newQuestion] = await db.insert(questions).values(question).returning();
     
     if (tagNames.length > 0) {
-      const questionTags = await this.getOrCreateTags(tagNames);
+      const createdTags = await this.getOrCreateTags(tagNames);
       await db.insert(questionTags).values(
-        questionTags.map(tag => ({
+        createdTags.map(tag => ({
           questionId: newQuestion.id,
           tagId: tag.id,
         }))
