@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useClerk } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +14,7 @@ interface NavbarProps {
 
 export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
   const { user } = useAuth();
+  const { signOut } = useClerk();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -21,7 +23,7 @@ export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
   };
 
   const handleLogout = () => {
-    window.location.href = "/api/logout";
+    signOut();
   };
 
   const getUserInitials = (user: any) => {

@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { RichTextEditor } from "@/components/rich-text-editor";
-import { apiRequest } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { formatDistanceToNow } from "date-fns";
-import { ChevronUp, ChevronDown, Check } from "lucide-react";
+import { ChevronUp, ChevronDown, Check, MessageSquare, Calendar, Eye } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 interface QuestionDetailModalProps {
   questionId: number;
@@ -20,6 +19,7 @@ interface QuestionDetailModalProps {
 export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetailModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [answerContent, setAnswerContent] = useState("");
 
   const { data: question, isLoading: questionLoading } = useQuery({
@@ -34,8 +34,12 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
 
   const createAnswerMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await apiRequest("POST", `/api/questions/${questionId}/answers`, {
-        content,
+      const response = await apiRequest(`/api/questions/${questionId}/answers`, {
+        method: "POST",
+        body: JSON.stringify({
+          content,
+          authorId: user?.id,
+        }),
       });
       return response.json();
     },
@@ -48,17 +52,6 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
       refetchAnswers();
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to post answer. Please try again.",
@@ -69,23 +62,18 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
 
   const voteQuestionMutation = useMutation({
     mutationFn: async (voteType: number) => {
-      await apiRequest("POST", `/api/questions/${questionId}/vote`, { voteType });
+      await apiRequest(`/api/questions/${questionId}/vote`, {
+        method: "POST",
+        body: JSON.stringify({ 
+          voteType,
+          userId: user?.id,
+        }),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/questions", questionId] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to vote. Please try again.",
@@ -96,23 +84,18 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
 
   const voteAnswerMutation = useMutation({
     mutationFn: async ({ answerId, voteType }: { answerId: number; voteType: number }) => {
-      await apiRequest("POST", `/api/answers/${answerId}/vote`, { voteType });
+      await apiRequest(`/api/answers/${answerId}/vote`, {
+        method: "POST",
+        body: JSON.stringify({ 
+          voteType,
+          userId: user?.id,
+        }),
+      });
     },
     onSuccess: () => {
       refetchAnswers();
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to vote. Please try again.",
@@ -123,7 +106,9 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
 
   const acceptAnswerMutation = useMutation({
     mutationFn: async (answerId: number) => {
-      await apiRequest("POST", `/api/answers/${answerId}/accept`);
+      await apiRequest(`/api/answers/${answerId}/accept`, {
+        method: "POST",
+      });
     },
     onSuccess: () => {
       refetchAnswers();
@@ -133,17 +118,6 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
       });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to accept answer. Please try again.",
@@ -153,6 +127,15 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
   });
 
   const handleSubmitAnswer = () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to answer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!answerContent.trim()) {
       toast({
         title: "Error",
@@ -273,98 +256,98 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
 
             {/* Question Content */}
             <div className="flex-1">
-              <div 
-                className="prose prose-invert max-w-none dark-text"
-                dangerouslySetInnerHTML={{ __html: question.content }}
-              />
-
+              <div className="prose dark:prose-invert max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: question.content }} />
+              </div>
+              
               {/* Question Meta */}
-              <div className="flex items-center justify-between mt-6 pt-4 border-t dark-border">
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={question.author?.profileImageUrl} />
-                    <AvatarFallback className={`text-white text-sm font-semibold ${getAvatarGradient(question.author)}`}>
-                      {getUserInitials(question.author)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex items-center space-x-1">
-                    <span className={`${getBadgeColors(getUserDisplayName(question.author))} text-white px-2 py-0.5 rounded text-xs font-medium`}>
-                      {getUserDisplayName(question.author)}
-                    </span>
-                    <span className="dark-text-secondary text-sm">User Name</span>
-                  </div>
+              <div className="flex items-center space-x-4 mt-4 text-sm dark-text-muted">
+                <div className="flex items-center space-x-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(question.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div className="dark-text-secondary text-sm">
-                  asked {question.createdAt ? formatDistanceToNow(new Date(question.createdAt), { addSuffix: true }) : ''}
+                <div className="flex items-center space-x-1">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{answers.length} answers</span>
                 </div>
+                <div className="flex items-center space-x-1">
+                  <Eye className="h-4 w-4" />
+                  <span>1.2k views</span>
+                </div>
+              </div>
+
+              {/* Author Info */}
+              <div className="flex items-center space-x-2 mt-4">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={question.author?.profileImageUrl} />
+                  <AvatarFallback className={`text-white text-xs font-semibold ${getAvatarGradient(question.author)}`}>
+                    {getUserInitials(question.author)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm dark-text-muted">
+                  {getUserDisplayName(question.author)}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Answers Section */}
           <div className="border-t dark-border pt-6">
-            <h3 className="text-xl font-semibold dark-text mb-4">
-              Answers <span className="accent-green">({answers.length})</span>
+            <h3 className="text-lg font-semibold dark-text mb-4">
+              {answers.length} Answer{answers.length !== 1 ? 's' : ''}
             </h3>
-
-            {/* Answer List */}
-            <div className="space-y-6">
+            
+            <div className="space-y-4">
               {answers.map((answer: any) => (
-                <div key={answer.id} className="flex items-start space-x-6 p-4 dark-surface rounded-lg">
+                <div key={answer.id} className="flex items-start space-x-4 p-4 dark-surface rounded-lg border dark-border">
                   {/* Vote Controls */}
                   <div className="flex flex-col items-center space-y-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => voteAnswerMutation.mutate({ answerId: answer.id, voteType: 1 })}
-                      className="w-8 h-8 p-0 border dark-border hover:dark-border"
+                      className="w-8 h-8 p-0 border dark-border hover:dark-surface"
                     >
                       <ChevronUp className="h-3 w-3" />
                     </Button>
-                    <span className={`text-lg font-semibold ${answer.voteCount > 0 ? 'accent-green' : 'dark-text'}`}>
-                      {answer.voteCount || 0}
-                    </span>
+                    <span className="text-sm font-semibold dark-text">{answer.voteCount || 0}</span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => voteAnswerMutation.mutate({ answerId: answer.id, voteType: -1 })}
-                      className="w-8 h-8 p-0 border dark-border hover:dark-border"
+                      className="w-8 h-8 p-0 border dark-border hover:dark-surface"
                     >
                       <ChevronDown className="h-3 w-3" />
                     </Button>
-                    {answer.isAccepted && (
-                      <div className="w-8 h-8 flex items-center justify-center text-green-400">
-                        <Check className="h-4 w-4" />
-                      </div>
-                    )}
                   </div>
 
                   {/* Answer Content */}
                   <div className="flex-1">
-                    <div 
-                      className="prose prose-invert max-w-none dark-text"
-                      dangerouslySetInnerHTML={{ __html: answer.content }}
-                    />
-
+                    <div className="prose dark:prose-invert max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: answer.content }} />
+                    </div>
+                    
                     {/* Answer Meta */}
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t dark-border">
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={answer.author?.profileImageUrl} />
-                          <AvatarFallback className={`text-white text-xs font-semibold ${getAvatarGradient(answer.author)}`}>
-                            {getUserInitials(answer.author)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex items-center space-x-1">
-                          <span className={`${getBadgeColors(getUserDisplayName(answer.author))} text-white px-2 py-0.5 rounded text-xs font-medium`}>
-                            {getUserDisplayName(answer.author)}
-                          </span>
-                          <span className="dark-text-secondary text-sm">User Name</span>
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center space-x-4 text-sm dark-text-muted">
+                        <div className="flex items-center space-x-2">
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage src={answer.author?.profileImageUrl} />
+                            <AvatarFallback className={`text-white text-xs font-semibold ${getAvatarGradient(answer.author)}`}>
+                              {getUserInitials(answer.author)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{getUserDisplayName(answer.author)}</span>
                         </div>
+                        <span>{new Date(answer.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <div className="dark-text-secondary text-sm">
-                        answered {answer.createdAt ? formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true }) : ''}
-                      </div>
+                      
+                      {answer.isAccepted && (
+                        <Badge className="bg-green-600 text-white">
+                          <Check className="h-3 w-3 mr-1" />
+                          Accepted
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -372,28 +355,29 @@ export function QuestionDetailModal({ questionId, open, onClose }: QuestionDetai
             </div>
           </div>
 
-          {/* Submit Answer Form */}
-          <div className="border-t dark-border pt-6">
-            <h3 className="text-lg font-semibold dark-text mb-4">Submit Your Answer</h3>
-            
-            <div className="space-y-4">
-              <RichTextEditor
-                content={answerContent}
-                onChange={setAnswerContent}
-                placeholder="Write your answer here. Include code examples and explanations..."
-              />
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleSubmitAnswer}
-                  disabled={createAnswerMutation.isPending || !answerContent.trim()}
-                  className="bg-accent-blue hover:bg-blue-600"
-                >
-                  {createAnswerMutation.isPending ? "Submitting..." : "Submit Answer"}
-                </Button>
+          {/* Add Answer Section */}
+          {user && (
+            <div className="border-t dark-border pt-6">
+              <h3 className="text-lg font-semibold dark-text mb-4">Your Answer</h3>
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Write your answer here..."
+                  value={answerContent}
+                  onChange={(e) => setAnswerContent(e.target.value)}
+                  className="min-h-[120px] dark-bg border dark-border dark-text placeholder:dark-text-muted"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSubmitAnswer}
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    disabled={createAnswerMutation.isPending || !answerContent.trim()}
+                  >
+                    {createAnswerMutation.isPending ? "Submitting..." : "Submit Answer"}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

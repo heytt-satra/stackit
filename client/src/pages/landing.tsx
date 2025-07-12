@@ -1,11 +1,36 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Users, Search, Award } from "lucide-react";
+import { SignIn } from "@clerk/clerk-react";
+import { useState } from "react";
 
 export default function Landing() {
+  const [showSignIn, setShowSignIn] = useState(false);
+
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    setShowSignIn(true);
   };
+
+  if (showSignIn) {
+    return (
+      <div className="min-h-screen reddit-bg flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <SignIn 
+            appearance={{
+              elements: {
+                rootBox: "mx-auto",
+                card: "reddit-card border reddit-border",
+                headerTitle: "reddit-text",
+                headerSubtitle: "reddit-text-muted",
+                formButtonPrimary: "bg-orange-500 hover:bg-orange-600 text-white",
+                footerActionLink: "text-orange-500 hover:text-orange-600",
+              }
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen reddit-bg">

@@ -1,23 +1,21 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { X, Upload, Image, Video, FileText } from "lucide-react";
+import { X, Upload, ArrowLeft } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 const askQuestionSchema = z.object({
-  title: z.string().min(10, "Title must be at least 10 characters"),
-  content: z.string().min(20, "Description must be at least 20 characters"),
-  tags: z.string().min(1, "At least one tag is required"),
+  title: z.string().min(10, "Title must be at least 10 characters").max(300, "Title must be less than 300 characters"),
 });
 
 type AskQuestionFormData = z.infer<typeof askQuestionSchema>;
@@ -30,26 +28,20 @@ interface AskQuestionModalProps {
 
 export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [content, setContent] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  const form = useForm<AskQuestionFormData>({
+    resolver: zodResolver(askQuestionSchema),
+  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    const validFiles = files.filter(file => {
-      const isValidType = file.type.startsWith('image/') || file.type.startsWith('video/');
-      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
-      return isValidType && isValidSize;
-    });
-    
-    if (validFiles.length !== files.length) {
-      toast({
-        title: "Warning",
-        description: "Some files were skipped. Only images and videos under 10MB are allowed.",
-        variant: "destructive",
-      });
-    }
-    
-    setUploadedFiles(prev => [...prev, ...validFiles].slice(0, 5)); // Max 5 files
+    setUploadedFiles(prev => [...prev, ...files]);
   };
 
   const removeFile = (index: number) => {
@@ -57,21 +49,12 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
   };
 
   const getFileIcon = (file: File) => {
-    if (file.type.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (file.type.startsWith('video/')) return <Video className="h-4 w-4" />;
-    return <FileText className="h-4 w-4" />;
+    if (file.type.startsWith('image/')) return '🖼️';
+    if (file.type.includes('pdf')) return '📄';
+    if (file.type.includes('text')) return '📝';
+    if (file.type.includes('code') || file.name.endsWith('.js') || file.name.endsWith('.ts') || file.name.endsWith('.py')) return '💻';
+    return '📎';
   };
-  const [tagInput, setTagInput] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  const form = useForm<AskQuestionFormData>({
-    resolver: zodResolver(askQuestionSchema),
-    defaultValues: {
-      title: "",
-      content: "",
-      tags: "",
-    },
-  });
 
   const { data: availableTags = [] } = useQuery({
     queryKey: ["/api/tags"],
@@ -80,13 +63,16 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
 
   const createQuestionMutation = useMutation({
     mutationFn: async (data: AskQuestionFormData & { content: string; tags: string[] }) => {
+      const requestBody = {
+        title: data.title,
+        content: data.content,
+        tags: data.tags,
+        authorId: user?.id,
+      };
+      
       return await apiRequest("/api/questions", {
         method: "POST",
-        body: JSON.stringify({
-          title: data.title,
-          content: data.content,
-          tags: data.tags,
-        }),
+        body: JSON.stringify(requestBody),
       });
     },
     onSuccess: () => {
@@ -99,17 +85,6 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
       onSuccess();
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to create post. Please try again.",
@@ -150,6 +125,15 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
   };
 
   const onSubmit = (data: AskQuestionFormData) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a post.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedTags.length === 0) {
       toast({
         title: "Error",
@@ -182,7 +166,19 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto reddit-surface border reddit-border">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold reddit-text">Create a post</DialogTitle>
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClose}
+              className="flex items-center gap-2 text-reddit-text-muted hover:text-reddit-text"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <DialogTitle className="text-2xl font-bold reddit-text">Create a post</DialogTitle>
+            <div className="w-10"></div> {/* Spacer for centering */}
+          </div>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -281,52 +277,39 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
             </div>
           </div>
 
-          {/* Media Upload Section */}
+          {/* File Upload */}
           <div>
             <Label className="text-sm font-medium reddit-text">
-              Media (Optional)
+              Attachments (Optional)
             </Label>
             <div className="mt-2">
-              <div className="border-2 border-dashed reddit-border rounded-lg p-6 text-center hover:reddit-hover transition-colors">
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <Upload className="h-8 w-8 reddit-text-muted mx-auto mb-2" />
-                  <p className="reddit-text text-sm">
-                    Drag & drop images or videos here, or click to browse
-                  </p>
-                  <p className="reddit-text-muted text-xs mt-1">
-                    Max 5 files, 10MB each. Images and videos only.
-                  </p>
-                </label>
-              </div>
-
-              {/* Uploaded Files Preview */}
+              <input
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload"
+              />
+              <label
+                htmlFor="file-upload"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <Upload className="h-4 w-4" />
+                <span className="text-sm">Choose files</span>
+              </label>
+              
               {uploadedFiles.length > 0 && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-2">
                   {uploadedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between reddit-card rounded-lg p-3 border reddit-border">
-                      <div className="flex items-center space-x-3">
-                        {getFileIcon(file)}
-                        <div>
-                          <p className="reddit-text text-sm font-medium">{file.name}</p>
-                          <p className="reddit-text-muted text-xs">
-                            {(file.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      </div>
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      <span>{getFileIcon(file)}</span>
+                      <span className="text-sm flex-1">{file.name}</span>
                       <button
                         type="button"
                         onClick={() => removeFile(index)}
-                        className="reddit-text-muted hover:reddit-text p-1"
+                        className="text-red-500 hover:text-red-700"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
@@ -335,8 +318,8 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
             </div>
           </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-4 pt-6 border-t reddit-border">
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button
               type="button"
               variant="outline"
@@ -347,8 +330,8 @@ export function AskQuestionModal({ open, onClose, onSuccess }: AskQuestionModalP
             </Button>
             <Button
               type="submit"
-              disabled={createQuestionMutation.isPending}
               className="bg-orange-500 hover:bg-orange-600 text-white"
+              disabled={createQuestionMutation.isPending}
             >
               {createQuestionMutation.isPending ? "Posting..." : "Post"}
             </Button>

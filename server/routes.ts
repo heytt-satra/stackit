@@ -1,26 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertQuestionSchema, insertAnswerSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
-
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
   // Question routes
   app.get('/api/questions', async (req, res) => {
     try {
@@ -60,13 +44,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/questions', isAuthenticated, async (req: any, res) => {
+  app.post('/api/questions', async (req, res) => {
     try {
-      const { tags, ...questionData } = req.body;
+      const { tags, authorId, ...questionData } = req.body;
+      
+      if (!authorId) {
+        return res.status(400).json({ message: "Author ID is required" });
+      }
       
       const validatedData = insertQuestionSchema.parse({
         ...questionData,
-        authorId: req.user.claims.sub,
+        authorId,
       });
       
       const tagNames = Array.isArray(tags) ? tags : 
@@ -83,11 +71,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/questions/:id/vote', isAuthenticated, async (req: any, res) => {
+  app.post('/api/questions/:id/vote', async (req, res) => {
     try {
       const questionId = parseInt(req.params.id);
-      const { voteType } = req.body;
-      const userId = req.user.claims.sub;
+      const { voteType, userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
       
       if (![1, -1].includes(voteType)) {
         return res.status(400).json({ message: "Invalid vote type" });
@@ -113,15 +104,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/questions/:id/answers', isAuthenticated, async (req: any, res) => {
+  app.post('/api/questions/:id/answers', async (req, res) => {
     try {
       const questionId = parseInt(req.params.id);
-      const answerData = req.body;
+      const { content, authorId } = req.body;
+      
+      if (!authorId) {
+        return res.status(400).json({ message: "Author ID is required" });
+      }
       
       const validatedData = insertAnswerSchema.parse({
-        ...answerData,
+        content,
         questionId,
-        authorId: req.user.claims.sub,
+        authorId,
       });
       
       const answer = await storage.createAnswer(validatedData);
@@ -135,11 +130,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/answers/:id/vote', isAuthenticated, async (req: any, res) => {
+  app.post('/api/answers/:id/vote', async (req, res) => {
     try {
       const answerId = parseInt(req.params.id);
-      const { voteType } = req.body;
-      const userId = req.user.claims.sub;
+      const { voteType, userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
       
       if (![1, -1].includes(voteType)) {
         return res.status(400).json({ message: "Invalid vote type" });
@@ -153,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/answers/:id/accept', isAuthenticated, async (req: any, res) => {
+  app.post('/api/answers/:id/accept', async (req, res) => {
     try {
       const answerId = parseInt(req.params.id);
       await storage.acceptAnswer(answerId);
