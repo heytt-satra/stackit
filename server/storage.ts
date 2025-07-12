@@ -184,13 +184,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async voteQuestion(questionId: number, userId: string, voteType: number): Promise<void> {
-    await db
-      .insert(questionVotes)
-      .values({ questionId, userId, voteType })
-      .onConflictDoUpdate({
-        target: [questionVotes.questionId, questionVotes.userId],
-        set: { voteType },
-      });
+    try {
+      console.log("Storage: Voting on question", { questionId, userId, voteType });
+      
+      await db
+        .insert(questionVotes)
+        .values({ questionId, userId, voteType })
+        .onConflictDoUpdate({
+          target: [questionVotes.questionId, questionVotes.userId],
+          set: { voteType },
+        });
+      
+      console.log("Storage: Vote recorded successfully");
+    } catch (error) {
+      console.error("Storage: Error voting on question:", error);
+      throw error;
+    }
   }
 
   // Answer operations
@@ -221,13 +230,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async voteAnswer(answerId: number, userId: string, voteType: number): Promise<void> {
-    await db
-      .insert(answerVotes)
-      .values({ answerId, userId, voteType })
-      .onConflictDoUpdate({
-        target: [answerVotes.answerId, answerVotes.userId],
-        set: { voteType },
-      });
+    try {
+      console.log("Storage: Voting on answer", { answerId, userId, voteType });
+      
+      await db
+        .insert(answerVotes)
+        .values({ answerId, userId, voteType })
+        .onConflictDoUpdate({
+          target: [answerVotes.answerId, answerVotes.userId],
+          set: { voteType },
+        });
+      
+      console.log("Storage: Vote recorded successfully");
+    } catch (error) {
+      console.error("Storage: Error voting on answer:", error);
+      throw error;
+    }
   }
 
   async acceptAnswer(answerId: number): Promise<void> {

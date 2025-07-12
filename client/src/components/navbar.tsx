@@ -29,7 +29,7 @@ export function Navbar({ onSearch, onAskQuestion }: NavbarProps) {
   };
 
   const handleLogoClick = () => {
-    setLocation("/");
+    setLocation("/"); // This is the main questions feed page
   };
 
   const getUserInitials = (user: any) => {

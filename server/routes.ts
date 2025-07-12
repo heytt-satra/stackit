@@ -127,15 +127,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const questionId = parseInt(req.params.id);
       const { voteType, userId } = req.body;
       
+      console.log("Voting on question:", { questionId, voteType, userId });
+      
       if (!userId) {
+        console.log("Error: User ID is required");
         return res.status(400).json({ message: "User ID is required" });
       }
       
       if (![1, -1].includes(voteType)) {
+        console.log("Error: Invalid vote type:", voteType);
         return res.status(400).json({ message: "Invalid vote type" });
       }
       
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        console.log("Error: User not found:", userId);
+        return res.status(400).json({ message: "User not found" });
+      }
+      
+      console.log("User found, proceeding with vote");
       await storage.voteQuestion(questionId, userId, voteType);
+      console.log("Vote recorded successfully");
       res.json({ success: true });
     } catch (error) {
       console.error("Error voting on question:", error);
@@ -186,15 +199,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const answerId = parseInt(req.params.id);
       const { voteType, userId } = req.body;
       
+      console.log("Voting on answer:", { answerId, voteType, userId });
+      
       if (!userId) {
+        console.log("Error: User ID is required");
         return res.status(400).json({ message: "User ID is required" });
       }
       
       if (![1, -1].includes(voteType)) {
+        console.log("Error: Invalid vote type:", voteType);
         return res.status(400).json({ message: "Invalid vote type" });
       }
       
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        console.log("Error: User not found:", userId);
+        return res.status(400).json({ message: "User not found" });
+      }
+      
+      console.log("User found, proceeding with vote");
       await storage.voteAnswer(answerId, userId, voteType);
+      console.log("Vote recorded successfully");
       res.json({ success: true });
     } catch (error) {
       console.error("Error voting on answer:", error);

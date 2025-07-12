@@ -8,6 +8,7 @@ import {
   serial,
   integer,
   boolean,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -60,7 +61,9 @@ export const questionVotes = pgTable("question_votes", {
   userId: varchar("user_id").notNull().references(() => users.id),
   voteType: integer("vote_type").notNull(), // 1 for upvote, -1 for downvote
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  uniqueVote: unique().on(table.questionId, table.userId),
+}));
 
 export const answerVotes = pgTable("answer_votes", {
   id: serial("id").primaryKey(),
@@ -68,7 +71,9 @@ export const answerVotes = pgTable("answer_votes", {
   userId: varchar("user_id").notNull().references(() => users.id),
   voteType: integer("vote_type").notNull(), // 1 for upvote, -1 for downvote
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  uniqueVote: unique().on(table.answerId, table.userId),
+}));
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({

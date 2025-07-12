@@ -1,6 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { useLocation } from "wouter";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
 
 interface QuestionCardProps {
   question: any;
@@ -8,6 +16,65 @@ interface QuestionCardProps {
 }
 
 export function QuestionCard({ question, onClick }: QuestionCardProps) {
+  const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [userVotes, setUserVotes] = useState<{ [key: string]: number }>({});
+
+  const voteQuestionMutation = useMutation({
+    mutationFn: async (voteType: number) => {
+      await apiRequest(`/api/questions/${question.id}/vote`, {
+        method: "POST",
+        body: JSON.stringify({ 
+          voteType,
+          userId: user?.id,
+        }),
+      });
+    },
+    onSuccess: (_, voteType) => {
+      setUserVotes(prev => ({
+        ...prev,
+        [`question-${question.id}`]: voteType
+      }));
+      queryClient.invalidateQueries({ queryKey: ["/api/questions"] });
+      toast({
+        title: "Vote recorded",
+        description: voteType === 1 ? "Upvoted!" : "Downvoted!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to vote. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleVote = (voteType: number) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to vote.",
+        variant: "destructive",
+      });
+      return;
+    }
+    voteQuestionMutation.mutate(voteType);
+  };
+
+  const getVoteButtonClass = (voteType: number) => {
+    const userVote = userVotes[`question-${question.id}`];
+    const isVoted = userVote === voteType;
+    const baseClass = "p-1 hover:bg-gray-600 rounded";
+    
+    if (isVoted) {
+      return `${baseClass} ${voteType === 1 ? 'text-orange-500' : 'text-blue-500'}`;
+    }
+    return `${baseClass} text-gray-400`;
+  };
+
   const getUserInitials = (user: any) => {
     if (user?.firstName && user?.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
@@ -52,21 +119,35 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
   return (
     <article 
       className="reddit-card border reddit-border rounded-lg hover:reddit-hover transition-colors cursor-pointer"
-      onClick={onClick}
+      onClick={() => setLocation(`/questions/${question.id}`)}
     >
       <div className="flex">
         {/* Vote section */}
         <div className="w-10 flex flex-col items-center py-3 px-2">
-          <button className="p-1 hover:bg-gray-600 rounded">
-            <div className="w-5 h-5 text-gray-400 hover:text-orange-500">
+          <button 
+            className={getVoteButtonClass(1)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVote(1);
+            }}
+            disabled={voteQuestionMutation.isLoading}
+          >
+            <div className="w-5 h-5">
               ▲
             </div>
           </button>
           <span className="text-sm font-semibold reddit-text my-1">
             {question.voteCount || 0}
           </span>
-          <button className="p-1 hover:bg-gray-600 rounded">
-            <div className="w-5 h-5 text-gray-400 hover:text-blue-500">
+          <button 
+            className={getVoteButtonClass(-1)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVote(-1);
+            }}
+            disabled={voteQuestionMutation.isLoading}
+          >
+            <div className="w-5 h-5">
               ▼
             </div>
           </button>

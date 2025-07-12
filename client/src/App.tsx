@@ -9,6 +9,7 @@ import { UserSync } from "@/components/UserSync";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
+import QuestionDetailPage from "@/pages/question-detail";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -36,6 +37,7 @@ function Router() {
         ) : (
           <>
             <Route path="/" component={Home} />
+            <Route path="/questions/:id" component={QuestionDetailPage} />
           </>
         )}
         <Route component={NotFound} />

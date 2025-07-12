@@ -7,10 +7,12 @@ export function UserSync() {
 
   useEffect(() => {
     if (isLoaded && user) {
+      console.log("UserSync: Syncing user to database", { userId: user.id, email: user.emailAddresses[0]?.emailAddress });
+      
       // Sync user data to our database
       const syncUser = async () => {
         try {
-          await apiRequest("/api/users", {
+          const response = await apiRequest("/api/users", {
             method: "POST",
             body: JSON.stringify({
               id: user.id,
@@ -20,8 +22,10 @@ export function UserSync() {
               profileImageUrl: user.imageUrl,
             }),
           });
+          
+          console.log("UserSync: User synced successfully");
         } catch (error) {
-          console.error("Failed to sync user:", error);
+          console.error("UserSync: Failed to sync user:", error);
         }
       };
 
